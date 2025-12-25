@@ -36,13 +36,8 @@ const allowlist = [
 async function buildAll() {
   await rm("dist", { recursive: true, force: true });
 
-  console.log("pushing database schema...");
-  try {
-    execSync("npx drizzle-kit push", { stdio: "inherit" });
-  } catch (error) {
-    console.error("Warning: Failed to push database schema:", error);
-  }
-
+    // Skip database schema push during build - tables are created at runtime
+  console.log("Skipping database schema push (will be handled at runtime)...");
   console.log("building client...");
   await viteBuild();
 
