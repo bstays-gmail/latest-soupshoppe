@@ -2,9 +2,29 @@ import fs from "node:fs";
 import OpenAI, { toFile } from "openai";
 import { Buffer } from "node:buffer";
 
-export const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+// Lazy initialization for OpenAI client
+let _openai: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({
+      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+    });
+  }
+  return _openai;
+}
+
+// Export getter for openai client (for backwards compatibility)
+export const openai = new Proxy({} as OpenAI, {
+  get(_, prop) {
+    const client = getOpenAI();
+    const value = (client as any)[prop];
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  }
 });
 
 /**
@@ -15,7 +35,8 @@ export async function generateImageBuffer(
   prompt: string,
   size: "1024x1024" | "512x512" | "256x256" = "1024x1024"
 ): Promise<Buffer> {
-  const response = await openai.images.generate({
+  const client = getOpenAI();
+  const response = await client.images.generate({
     model: "gpt-image-1",
     prompt,
     size,
@@ -41,7 +62,8 @@ export async function editImages(
     )
   );
 
-  const response = await openai.images.edit({
+  const client = getOpenAI();
+  const response = await client.images.edit({
     model: "gpt-image-1",
     image: images,
     prompt,
@@ -56,4 +78,3 @@ export async function editImages(
 
   return imageBytes;
 }
-
