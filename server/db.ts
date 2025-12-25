@@ -20,6 +20,7 @@ if (!databaseUrl) {
 
 const pool = new pg.Pool({
   connectionString: databaseUrl,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 export const db = drizzle(pool, { schema });
