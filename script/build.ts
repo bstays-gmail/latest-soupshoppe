@@ -6,7 +6,6 @@ import { execSync } from "child_process";
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
 const allowlist = [
-const allowlist = [
   "@google/generative-ai",
   "axios",
   "connect-pg-simple",
@@ -35,8 +34,9 @@ const allowlist = [
 async function buildAll() {
   await rm("dist", { recursive: true, force: true });
 
-    // Skip database schema push during build - tables are created at runtime
+  // Skip database schema push during build - tables are created at runtime
   console.log("Skipping database schema push (will be handled at runtime)...");
+
   console.log("building client...");
   await viteBuild();
 
