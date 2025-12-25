@@ -3,12 +3,16 @@ import pg from "pg";
 import * as schema from "@shared/schema";
 import { readFileSync, existsSync } from "fs";
 
+// Log all environment variables at startup (excluding secrets)
+console.log("=== STARTUP DEBUG ===");
+console.log("Environment variables:", Object.keys(process.env).filter(k => !k.includes('SECRET') && !k.includes('PASSWORD') && !k.includes('KEY')).join(', '));
+console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL);
+console.log("=== END DEBUG ===");
+
 // Get database URL from environment
 function getDatabaseUrl(): string {
-  // Check environment variable first
   let databaseUrl = process.env.DATABASE_URL;
   
-  // In Replit deployments, may be stored in /tmp/replitdb
   if (!databaseUrl && existsSync("/tmp/replitdb")) {
     try {
       databaseUrl = readFileSync("/tmp/replitdb", "utf-8").trim();
@@ -18,7 +22,6 @@ function getDatabaseUrl(): string {
   }
   
   if (!databaseUrl) {
-    console.error("Environment variables available:", Object.keys(process.env).filter(k => !k.includes('SECRET') && !k.includes('PASSWORD') && !k.includes('KEY')).join(', '));
     throw new Error("DATABASE_URL is not set. Please add it to your environment variables.");
   }
   
