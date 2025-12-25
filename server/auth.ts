@@ -43,10 +43,11 @@ export async function setupAuth(app: Express) {
     store: new MemoryStore({
       checkPeriod: 86400000,
     }),
-    cookie: {
+        cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "lax",
     },
   };
 
