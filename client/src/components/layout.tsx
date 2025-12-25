@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { ShieldCheck, Instagram, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import logoImage from '@assets/SSlogo_smiley__1766196250599.png';
+const logoImage = '/logo.png';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
