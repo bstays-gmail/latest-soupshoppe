@@ -118,8 +118,24 @@ app.use((req, res, next) => {
           created_at TIMESTAMP DEFAULT NOW()
         )
       `);
-      await db.execute(sql`
+            await db.execute(sql`
         CREATE TABLE IF NOT EXISTS _migrations (version INT PRIMARY KEY)
+      `);
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS conversations (
+          id SERIAL PRIMARY KEY,
+          title TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT NOW() NOT NULL
+        )
+      `);
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS messages (
+          id SERIAL PRIMARY KEY,
+          conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+          role TEXT NOT NULL,
+          content TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT NOW() NOT NULL
+        )
       `);
       await db.execute(sql`INSERT INTO _migrations VALUES (4) ON CONFLICT DO NOTHING`);
       
@@ -143,6 +159,22 @@ app.use((req, res, next) => {
           item_id VARCHAR NOT NULL,
           image_url TEXT NOT NULL,
           created_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+           await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS conversations (
+          id SERIAL PRIMARY KEY,
+          title TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT NOW() NOT NULL
+        )
+      `);
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS messages (
+          id SERIAL PRIMARY KEY,
+          conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+          role TEXT NOT NULL,
+          content TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT NOW() NOT NULL
         )
       `);
       log("Ensured all tables exist");
