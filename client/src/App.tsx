@@ -33,6 +33,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/print-menu" component={PrintMenu} />
+      <Route path="/print" component={PrintMenu} />
       <ProtectedRoute path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>
