@@ -22,14 +22,6 @@ export default function PrintMenu() {
   const activeSoups = (menu?.soups ?? []).filter(Boolean).map(getFreshItem).filter((s): s is MenuItem => s !== null);
   const specials = menu?.specials;
 
-  useEffect(() => {
-    if (hydrated && !isLoading && menu?.isPublished) {
-      setTimeout(() => {
-        window.print();
-      }, 500);
-    }
-  }, [hydrated, isLoading, menu?.isPublished]);
-
   if (!hydrated || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -67,7 +59,7 @@ export default function PrintMenu() {
           max-width: 210mm;
           min-height: 297mm;
           margin: 0 auto;
-          padding: 20px;
+          padding: 24px;
           font-family: 'Inter', system-ui, sans-serif;
           background: white;
           color: #1a1a1a;
@@ -75,49 +67,51 @@ export default function PrintMenu() {
         
         .print-header {
           text-align: center;
-          border-bottom: 3px solid #8B4513;
-          padding-bottom: 16px;
-          margin-bottom: 24px;
+          border-bottom: 4px solid #8B4513;
+          padding-bottom: 20px;
+          margin-bottom: 32px;
         }
         
         .print-logo {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 36px;
-          font-weight: 700;
+          font-size: 48px;
+          font-weight: 800;
           color: #8B4513;
           margin: 0;
         }
         
         .print-tagline {
-          font-size: 14px;
-          color: #666;
-          margin-top: 4px;
+          font-size: 18px;
+          font-weight: 600;
+          color: #555;
+          margin-top: 8px;
         }
         
         .print-date {
           display: inline-block;
           background: #FDF5E6;
-          border: 1px solid #8B4513;
-          border-radius: 20px;
-          padding: 6px 16px;
-          font-size: 14px;
-          font-weight: 600;
+          border: 2px solid #8B4513;
+          border-radius: 24px;
+          padding: 10px 24px;
+          font-size: 20px;
+          font-weight: 700;
           color: #8B4513;
-          margin-top: 12px;
+          margin-top: 16px;
         }
         
         .print-section {
-          margin-bottom: 24px;
+          margin-bottom: 32px;
         }
         
         .print-section-title {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 22px;
-          font-weight: 700;
+          font-size: 32px;
+          font-weight: 800;
           color: #8B4513;
-          border-bottom: 2px solid #DEB887;
-          padding-bottom: 8px;
-          margin-bottom: 16px;
+          border-bottom: 3px solid #DEB887;
+          padding-bottom: 10px;
+          margin-bottom: 20px;
+          text-align: center;
         }
         
         .print-grid {
@@ -126,110 +120,80 @@ export default function PrintMenu() {
           gap: 16px;
         }
         
-        .print-item {
-          display: flex;
-          gap: 12px;
-          padding: 12px;
+        .print-item-text {
+          padding: 16px 20px;
           background: #FEFEFE;
-          border: 1px solid #E8E0D5;
-          border-radius: 8px;
-        }
-        
-        .print-item-image {
-          width: 70px;
-          height: 70px;
-          object-fit: cover;
-          border-radius: 6px;
-          flex-shrink: 0;
-        }
-        
-        .print-item-content {
-          flex: 1;
-          min-width: 0;
+          border: 2px solid #DEB887;
+          border-radius: 10px;
+          text-align: center;
         }
         
         .print-item-name {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 14px;
-          font-weight: 600;
+          font-size: 22px;
+          font-weight: 700;
           color: #333;
-          margin: 0 0 4px 0;
-        }
-        
-        .print-item-description {
-          font-size: 11px;
-          color: #666;
-          line-height: 1.4;
           margin: 0;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        
-        .print-item-text {
-          padding: 12px 16px;
-          background: #FEFEFE;
-          border: 1px solid #E8E0D5;
-          border-radius: 8px;
         }
         
         .print-specials-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
+          gap: 20px;
         }
         
         .print-special-item {
-          padding: 16px;
+          padding: 20px;
           background: #FDF5E6;
-          border: 1px solid #DEB887;
-          border-radius: 8px;
+          border: 2px solid #DEB887;
+          border-radius: 10px;
+          text-align: center;
         }
         
         .print-special-label {
-          font-size: 10px;
-          font-weight: 700;
+          font-size: 14px;
+          font-weight: 800;
           text-transform: uppercase;
-          letter-spacing: 1px;
+          letter-spacing: 1.5px;
           color: #8B4513;
-          margin-bottom: 8px;
+          margin-bottom: 10px;
         }
         
         .print-special-name {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 16px;
-          font-weight: 600;
+          font-size: 24px;
+          font-weight: 700;
           color: #333;
-          margin: 0 0 4px 0;
-        }
-        
-        .print-special-description {
-          font-size: 12px;
-          color: #666;
-          line-height: 1.4;
           margin: 0;
         }
         
         .print-footer {
-          margin-top: 32px;
-          padding-top: 16px;
-          border-top: 2px solid #DEB887;
+          margin-top: 40px;
+          padding-top: 20px;
+          border-top: 3px solid #DEB887;
           text-align: center;
         }
         
         .print-contact {
           display: flex;
           justify-content: center;
-          gap: 32px;
-          font-size: 12px;
-          color: #666;
+          gap: 40px;
+          font-size: 18px;
+          font-weight: 600;
+          color: #555;
         }
         
         .print-contact-item {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
+        }
+        
+        .print-hours {
+          font-size: 16px;
+          font-weight: 600;
+          color: #777;
+          margin-top: 16px;
         }
         
         .print-btn {
@@ -239,10 +203,10 @@ export default function PrintMenu() {
           background: #8B4513;
           color: white;
           border: none;
-          padding: 12px 24px;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
+          padding: 14px 28px;
+          border-radius: 10px;
+          font-size: 16px;
+          font-weight: 700;
           cursor: pointer;
           box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
@@ -263,7 +227,7 @@ export default function PrintMenu() {
       <div className="print-container">
         <header className="print-header">
           <h1 className="print-logo">Soup Shoppe</h1>
-          <p className="print-tagline">Fresh, homemade soups & artisanal sandwiches made daily</p>
+          <p className="print-tagline">Fresh, homemade soups & sandwiches made daily</p>
           <div className="print-date">
             {format(today, 'EEEE, MMMM do, yyyy')}
           </div>
@@ -276,9 +240,6 @@ export default function PrintMenu() {
               {activeSoups.map((soup) => (
                 <div key={soup.id} className="print-item-text">
                   <h3 className="print-item-name">{soup.name}</h3>
-                  {soup.description && (
-                    <p className="print-item-description">{soup.description}</p>
-                  )}
                 </div>
               ))}
             </div>
@@ -293,9 +254,6 @@ export default function PrintMenu() {
                 <div className="print-special-item">
                   <div className="print-special-label">Hot Panini</div>
                   <h3 className="print-special-name">{getFreshItem(specials.panini)!.name}</h3>
-                  {getFreshItem(specials.panini)!.description && (
-                    <p className="print-special-description">{getFreshItem(specials.panini)!.description}</p>
-                  )}
                 </div>
               )}
               
@@ -303,9 +261,6 @@ export default function PrintMenu() {
                 <div className="print-special-item">
                   <div className="print-special-label">Signature Sandwich</div>
                   <h3 className="print-special-name">{getFreshItem(specials.sandwich)!.name}</h3>
-                  {getFreshItem(specials.sandwich)!.description && (
-                    <p className="print-special-description">{getFreshItem(specials.sandwich)!.description}</p>
-                  )}
                 </div>
               )}
               
@@ -313,9 +268,6 @@ export default function PrintMenu() {
                 <div className="print-special-item">
                   <div className="print-special-label">Featured Salad</div>
                   <h3 className="print-special-name">{getFreshItem(specials.salad)!.name}</h3>
-                  {getFreshItem(specials.salad)!.description && (
-                    <p className="print-special-description">{getFreshItem(specials.salad)!.description}</p>
-                  )}
                 </div>
               )}
               
@@ -323,9 +275,6 @@ export default function PrintMenu() {
                 <div className="print-special-item">
                   <div className="print-special-label">Dinner Entrée</div>
                   <h3 className="print-special-name">{getFreshItem(specials.entree)!.name}</h3>
-                  {getFreshItem(specials.entree)!.description && (
-                    <p className="print-special-description">{getFreshItem(specials.entree)!.description}</p>
-                  )}
                 </div>
               )}
             </div>
@@ -336,14 +285,14 @@ export default function PrintMenu() {
           <div className="print-contact">
             <div className="print-contact-item">
               <span>📍</span>
-              <span>665 Martinsville Rd, Basking Ridge, NJ 07920</span>
+              <span>665 Martinsville Rd, Basking Ridge, NJ</span>
             </div>
             <div className="print-contact-item">
               <span>📞</span>
               <span>908-604-2000</span>
             </div>
           </div>
-          <p style={{ fontSize: '11px', color: '#999', marginTop: '12px' }}>
+          <p className="print-hours">
             Mon-Sat: 9AM-5PM | www.mysoupshop.com
           </p>
         </footer>
