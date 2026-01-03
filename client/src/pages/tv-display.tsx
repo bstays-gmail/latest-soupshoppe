@@ -38,8 +38,11 @@ export default function TVDisplay() {
   const activeSoups = (menu?.soups ?? []).filter(Boolean).map(getFreshItem).filter((s): s is MenuItem => s !== null);
   const specials = menu?.specials;
 
+  const isPreviewMode = dateParam !== null;
+  
   useEffect(() => {
-    if (!hydrated || isLoading || !menu?.isPublished || !canvasRef.current) return;
+    const canRender = menu?.isPublished || isPreviewMode;
+    if (!hydrated || isLoading || !canRender || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -206,7 +209,7 @@ export default function TVDisplay() {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
     setImageUrl(dataUrl);
 
-  }, [hydrated, isLoading, menu, items, menuDate]);
+  }, [hydrated, isLoading, menu, items, menuDate, isPreviewMode]);
 
   const handleDownload = () => {
     if (!imageUrl) return;
@@ -224,10 +227,18 @@ export default function TVDisplay() {
     );
   }
 
-  if (!menu?.isPublished) {
+  if (!menu?.isPublished && !isPreviewMode) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <p className="text-xl">Today's menu has not been published yet.</p>
+      </div>
+    );
+  }
+  
+  if (!menu || (menu.soups.every(s => s === null) && !menu.specials?.panini && !menu.specials?.sandwich && !menu.specials?.salad && !menu.specials?.entree)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-xl">No menu items have been added yet.</p>
       </div>
     );
   }
