@@ -1,9 +1,10 @@
 import { useRef, useEffect, useState } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useMenuStore, useHydrated, MenuItem } from '@/lib/store';
 import { useDailyMenu } from '@/hooks/use-daily-menu';
 import { Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSearch } from 'wouter';
 
 const COLORS = {
   paprika: '#8B2C1D',
@@ -21,8 +22,11 @@ export default function TVDisplay() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hydrated = useHydrated();
   const items = useMenuStore(state => state.items);
-  const today = new Date();
-  const { data: menu, isLoading } = useDailyMenu(today, hydrated);
+  const searchString = useSearch();
+  const urlParams = new URLSearchParams(searchString);
+  const dateParam = urlParams.get('date');
+  const menuDate = dateParam ? parseISO(dateParam) : new Date();
+  const { data: menu, isLoading } = useDailyMenu(menuDate, hydrated);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const getFreshItem = (item: MenuItem | null): MenuItem | null => {
@@ -202,12 +206,12 @@ export default function TVDisplay() {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
     setImageUrl(dataUrl);
 
-  }, [hydrated, isLoading, menu, items, today]);
+  }, [hydrated, isLoading, menu, items, menuDate]);
 
   const handleDownload = () => {
     if (!imageUrl) return;
     const link = document.createElement('a');
-    link.download = `soup-shoppe-tv-menu-${format(today, 'yyyy-MM-dd')}.jpg`;
+    link.download = `soup-shoppe-tv-menu-${format(menuDate, 'yyyy-MM-dd')}.jpg`;
     link.href = imageUrl;
     link.click();
   };
