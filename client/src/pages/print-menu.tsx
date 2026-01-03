@@ -44,7 +44,7 @@ export default function PrintMenu() {
         @media print {
           @page {
             size: A4 portrait;
-            margin: 10mm;
+            margin: 8mm;
           }
           body {
             -webkit-print-color-adjust: exact !important;
@@ -59,7 +59,7 @@ export default function PrintMenu() {
           max-width: 210mm;
           height: auto;
           margin: 0 auto;
-          padding: 12px 16px;
+          padding: 10px 14px;
           font-family: 'Inter', system-ui, sans-serif;
           background: white;
           color: #1a1a1a;
@@ -69,20 +69,20 @@ export default function PrintMenu() {
         .print-header {
           text-align: center;
           border-bottom: 3px solid #8B4513;
-          padding-bottom: 10px;
-          margin-bottom: 16px;
+          padding-bottom: 8px;
+          margin-bottom: 12px;
         }
         
         .print-logo {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 36px;
+          font-size: 42px;
           font-weight: 800;
           color: #8B4513;
           margin: 0;
         }
         
         .print-tagline {
-          font-size: 14px;
+          font-size: 16px;
           font-weight: 600;
           color: #555;
           margin-top: 4px;
@@ -93,25 +93,25 @@ export default function PrintMenu() {
           background: #FDF5E6;
           border: 2px solid #8B4513;
           border-radius: 20px;
-          padding: 6px 16px;
-          font-size: 16px;
+          padding: 6px 18px;
+          font-size: 18px;
           font-weight: 700;
           color: #8B4513;
           margin-top: 8px;
         }
         
         .print-section {
-          margin-bottom: 16px;
+          margin-bottom: 14px;
         }
         
         .print-section-title {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 24px;
+          font-size: 28px;
           font-weight: 800;
           color: #8B4513;
           border-bottom: 2px solid #DEB887;
           padding-bottom: 6px;
-          margin-bottom: 12px;
+          margin-bottom: 10px;
           text-align: center;
         }
         
@@ -131,20 +131,20 @@ export default function PrintMenu() {
         
         .print-item-name {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 18px;
+          font-size: 22px;
           font-weight: 700;
           color: #333;
           margin: 0;
         }
         
-        .print-specials-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 10px;
+        .print-specials-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
         }
         
         .print-special-item {
-          padding: 12px;
+          padding: 12px 16px;
           background: #FDF5E6;
           border: 2px solid #DEB887;
           border-radius: 8px;
@@ -152,25 +152,25 @@ export default function PrintMenu() {
         }
         
         .print-special-label {
-          font-size: 12px;
+          font-size: 14px;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 1px;
           color: #8B4513;
-          margin-bottom: 6px;
+          margin-bottom: 4px;
         }
         
         .print-special-name {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 18px;
+          font-size: 24px;
           font-weight: 700;
           color: #333;
           margin: 0;
         }
         
         .print-footer {
-          margin-top: 20px;
-          padding-top: 12px;
+          margin-top: 16px;
+          padding-top: 10px;
           border-top: 2px solid #DEB887;
           text-align: center;
         }
@@ -179,7 +179,7 @@ export default function PrintMenu() {
           display: flex;
           justify-content: center;
           gap: 30px;
-          font-size: 14px;
+          font-size: 16px;
           font-weight: 600;
           color: #555;
         }
@@ -191,10 +191,10 @@ export default function PrintMenu() {
         }
         
         .print-hours {
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 600;
           color: #777;
-          margin-top: 8px;
+          margin-top: 6px;
         }
         
         .print-btn {
@@ -250,7 +250,7 @@ export default function PrintMenu() {
         {specials && (specials.panini || specials.sandwich || specials.salad || specials.entree) && (
           <section className="print-section">
             <h2 className="print-section-title">Featured Items</h2>
-            <div className="print-specials-grid">
+            <div className="print-specials-stack">
               {specials.panini && getFreshItem(specials.panini) && (
                 <div className="print-special-item">
                   <div className="print-special-label">Hot Panini</div>
