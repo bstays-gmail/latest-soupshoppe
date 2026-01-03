@@ -34,10 +34,20 @@ export default function PrintMenu() {
     );
   }
 
-  if (!menu?.isPublished) {
+  const isPreview = dateParam !== null;
+  
+  if (!menu?.isPublished && !isPreview) {
     return (
       <div className="print-container">
         <p>Today's menu has not been published yet.</p>
+      </div>
+    );
+  }
+  
+  if (!menu || (menu.soups.every(s => s === null) && !menu.specials?.panini && !menu.specials?.sandwich && !menu.specials?.salad && !menu.specials?.entree)) {
+    return (
+      <div className="print-container">
+        <p>No menu items have been added yet.</p>
       </div>
     );
   }
