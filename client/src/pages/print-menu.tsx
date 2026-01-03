@@ -1,17 +1,21 @@
 import { useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useMenuStore, useHydrated, MenuItem, DailyMenu } from '@/lib/store';
 import { useDailyMenu } from '@/hooks/use-daily-menu';
 import { CLOUDINARY_IMAGE_URLS } from '@/lib/cloudinary-images';
 import { Loader2 } from 'lucide-react';
+import { useSearch } from 'wouter';
 
 const getImageUrl = (id: string): string | undefined => CLOUDINARY_IMAGE_URLS[id];
 
 export default function PrintMenu() {
   const hydrated = useHydrated();
   const items = useMenuStore(state => state.items);
-  const today = new Date();
-  const { data: menu, isLoading } = useDailyMenu(today, hydrated);
+  const searchString = useSearch();
+  const urlParams = new URLSearchParams(searchString);
+  const dateParam = urlParams.get('date');
+  const menuDate = dateParam ? parseISO(dateParam) : new Date();
+  const { data: menu, isLoading } = useDailyMenu(menuDate, hydrated);
 
   const getFreshItem = (item: MenuItem | null): MenuItem | null => {
     if (!item) return null;
@@ -230,7 +234,7 @@ export default function PrintMenu() {
           <h1 className="print-logo">Soup Shoppe</h1>
           <p className="print-tagline">Fresh, homemade soups & sandwiches made daily</p>
           <div className="print-date">
-            {format(today, 'EEEE, MMMM do, yyyy')}
+            {format(menuDate, 'EEEE, MMMM do, yyyy')}
           </div>
         </header>
 
