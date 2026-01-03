@@ -44,7 +44,7 @@ export default function PrintMenu() {
         @media print {
           @page {
             size: A4 portrait;
-            margin: 0.5in;
+            margin: 10mm;
           }
           body {
             -webkit-print-color-adjust: exact !important;
@@ -57,80 +57,81 @@ export default function PrintMenu() {
         
         .print-container {
           max-width: 210mm;
-          min-height: 297mm;
+          height: auto;
           margin: 0 auto;
-          padding: 24px;
+          padding: 12px 16px;
           font-family: 'Inter', system-ui, sans-serif;
           background: white;
           color: #1a1a1a;
+          box-sizing: border-box;
         }
         
         .print-header {
           text-align: center;
-          border-bottom: 4px solid #8B4513;
-          padding-bottom: 20px;
-          margin-bottom: 32px;
+          border-bottom: 3px solid #8B4513;
+          padding-bottom: 10px;
+          margin-bottom: 16px;
         }
         
         .print-logo {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 48px;
+          font-size: 36px;
           font-weight: 800;
           color: #8B4513;
           margin: 0;
         }
         
         .print-tagline {
-          font-size: 18px;
+          font-size: 14px;
           font-weight: 600;
           color: #555;
-          margin-top: 8px;
+          margin-top: 4px;
         }
         
         .print-date {
           display: inline-block;
           background: #FDF5E6;
           border: 2px solid #8B4513;
-          border-radius: 24px;
-          padding: 10px 24px;
-          font-size: 20px;
+          border-radius: 20px;
+          padding: 6px 16px;
+          font-size: 16px;
           font-weight: 700;
           color: #8B4513;
-          margin-top: 16px;
+          margin-top: 8px;
         }
         
         .print-section {
-          margin-bottom: 32px;
+          margin-bottom: 16px;
         }
         
         .print-section-title {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 32px;
+          font-size: 24px;
           font-weight: 800;
           color: #8B4513;
-          border-bottom: 3px solid #DEB887;
-          padding-bottom: 10px;
-          margin-bottom: 20px;
+          border-bottom: 2px solid #DEB887;
+          padding-bottom: 6px;
+          margin-bottom: 12px;
           text-align: center;
         }
         
         .print-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
+          gap: 8px;
         }
         
         .print-item-text {
-          padding: 16px 20px;
+          padding: 10px 12px;
           background: #FEFEFE;
           border: 2px solid #DEB887;
-          border-radius: 10px;
+          border-radius: 8px;
           text-align: center;
         }
         
         .print-item-name {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 22px;
+          font-size: 18px;
           font-weight: 700;
           color: #333;
           margin: 0;
@@ -139,46 +140,46 @@ export default function PrintMenu() {
         .print-specials-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 20px;
+          gap: 10px;
         }
         
         .print-special-item {
-          padding: 20px;
+          padding: 12px;
           background: #FDF5E6;
           border: 2px solid #DEB887;
-          border-radius: 10px;
+          border-radius: 8px;
           text-align: center;
         }
         
         .print-special-label {
-          font-size: 14px;
+          font-size: 12px;
           font-weight: 800;
           text-transform: uppercase;
-          letter-spacing: 1.5px;
+          letter-spacing: 1px;
           color: #8B4513;
-          margin-bottom: 10px;
+          margin-bottom: 6px;
         }
         
         .print-special-name {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 24px;
+          font-size: 18px;
           font-weight: 700;
           color: #333;
           margin: 0;
         }
         
         .print-footer {
-          margin-top: 40px;
-          padding-top: 20px;
-          border-top: 3px solid #DEB887;
+          margin-top: 20px;
+          padding-top: 12px;
+          border-top: 2px solid #DEB887;
           text-align: center;
         }
         
         .print-contact {
           display: flex;
           justify-content: center;
-          gap: 40px;
-          font-size: 18px;
+          gap: 30px;
+          font-size: 14px;
           font-weight: 600;
           color: #555;
         }
@@ -186,14 +187,14 @@ export default function PrintMenu() {
         .print-contact-item {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
         }
         
         .print-hours {
-          font-size: 16px;
+          font-size: 13px;
           font-weight: 600;
           color: #777;
-          margin-top: 16px;
+          margin-top: 8px;
         }
         
         .print-btn {
