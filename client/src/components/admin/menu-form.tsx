@@ -210,7 +210,7 @@ export function MenuForm({ date }: MenuFormProps) {
             {saveMenuMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Save Draft
           </Button>
-          <a href="/" target="_blank">
+          <a href={`/print?date=${format(date, 'yyyy-MM-dd')}`} target="_blank">
             <Button variant="outline" className="flex-1 sm:flex-none gap-2" data-testid="button-preview">
               <Eye className="h-4 w-4" />
               Preview
