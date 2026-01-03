@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useMenuStore, useHydrated } from '@/lib/store';
 import { MenuCard } from '@/components/ui/menu-card';
 import { Layout } from '@/components/layout';
@@ -8,14 +8,18 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ContactForm } from '@/components/contact-form';
 import { AnnouncementOverlay } from '@/components/announcement-overlay';
-import { Link } from 'wouter';
+import { Link, useSearch } from 'wouter';
 import { useDailyMenu } from '@/hooks/use-daily-menu';
 
 export default function Home() {
   const hydrated = useHydrated();
   const items = useMenuStore(state => state.items);
-  const today = new Date();
-  const { data: menu, isLoading } = useDailyMenu(today, hydrated);
+  const searchString = useSearch();
+  const urlParams = new URLSearchParams(searchString);
+  const dateParam = urlParams.get('date');
+  const menuDate = dateParam ? parseISO(dateParam) : new Date();
+  const isPreviewMode = dateParam !== null;
+  const { data: menu, isLoading } = useDailyMenu(menuDate, hydrated);
   const isPublished = menu?.isPublished ?? false;
 
   const getFreshItem = (item: any) => {
@@ -64,7 +68,7 @@ export default function Home() {
         </section>
 
         {/* Today's Specials / Menu Section */}
-        {isPublished && (
+        {(isPublished || isPreviewMode) && (
           <section id="today-menu" className="space-y-8">
             <div className="text-center space-y-3">
               <div className="flex flex-wrap justify-center gap-3">
@@ -77,7 +81,7 @@ export default function Home() {
               </div>
               <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-sm font-medium">
                 <CalendarDays className="h-4 w-4 mr-2" />
-                {format(today, 'EEEE, MMMM do, yyyy')}
+                {format(menuDate, 'EEEE, MMMM do, yyyy')}
               </div>
               <h2 className="text-3xl sm:text-4xl font-serif font-bold text-primary">
                 Today's Specials
@@ -157,7 +161,7 @@ export default function Home() {
           </section>
         )}
 
-        {!isPublished && (
+        {!isPublished && !isPreviewMode && (
           <section className="flex flex-col items-center justify-center py-12 text-center max-w-md mx-auto space-y-6">
             <div className="bg-secondary/30 p-8 rounded-full">
               <UtensilsCrossed className="h-16 w-16 text-muted-foreground/50" />
