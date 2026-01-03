@@ -3,7 +3,13 @@ import { useMenuStore, type DailyMenu, type MenuItem } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ItemSelector } from './item-selector';
-import { Trash2, Save, Eye, Loader2 } from 'lucide-react';
+import { Trash2, Save, Eye, Loader2, Printer, Tv, ChevronDown } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useDailyMenu, useSaveMenu, useLatestPublishedMenu } from '@/hooks/use-daily-menu';
@@ -210,12 +216,35 @@ export function MenuForm({ date }: MenuFormProps) {
             {saveMenuMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Save Draft
           </Button>
-          <a href={`/print?date=${format(date, 'yyyy-MM-dd')}`} target="_blank">
-            <Button variant="outline" className="flex-1 sm:flex-none gap-2" data-testid="button-preview">
-              <Eye className="h-4 w-4" />
-              Preview
-            </Button>
-          </a>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex-1 sm:flex-none gap-2" data-testid="button-preview">
+                <Eye className="h-4 w-4" />
+                Preview
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <a href={`/?date=${format(date, 'yyyy-MM-dd')}`} target="_blank" className="flex items-center gap-2 cursor-pointer">
+                  <Eye className="h-4 w-4" />
+                  Menu with Images
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href={`/print?date=${format(date, 'yyyy-MM-dd')}`} target="_blank" className="flex items-center gap-2 cursor-pointer">
+                  <Printer className="h-4 w-4" />
+                  Print Version
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href={`/tv?date=${format(date, 'yyyy-MM-dd')}`} target="_blank" className="flex items-center gap-2 cursor-pointer">
+                  <Tv className="h-4 w-4" />
+                  TV Display
+                </a>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button 
             className="flex-1 sm:flex-none gap-2 bg-primary hover:bg-primary/90 text-white" 
             onClick={handlePublish}
