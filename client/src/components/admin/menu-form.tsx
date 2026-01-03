@@ -116,7 +116,7 @@ export function MenuForm({ date }: MenuFormProps) {
     }
   };
 
-  const getItemsWithoutImages = (): MenuItem[] => {
+    const getItemsWithoutImages = (): MenuItem[] => {
     const allItems: (MenuItem | null)[] = [
       ...localMenu.soups,
       localMenu.specials.panini,
@@ -124,7 +124,14 @@ export function MenuForm({ date }: MenuFormProps) {
       localMenu.specials.salad,
       localMenu.specials.entree,
     ];
-    return allItems.filter((item): item is MenuItem => item !== null && !item.imageUrl);
+    // Check for items with no image OR items with local paths that won't work on production
+    return allItems.filter((item): item is MenuItem => {
+      if (item === null) return false;
+      if (!item.imageUrl) return true;
+      // Local paths like /generated-images/... need to be regenerated for Cloudinary
+      if (item.imageUrl.startsWith('/generated-images/')) return true;
+      return false;
+    });
   };
 
   const handlePublish = async () => {
