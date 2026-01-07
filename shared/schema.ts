@@ -70,6 +70,41 @@ export interface AnnouncementSettings {
   backgroundColor: string;
   textColor: string;
 }
+export const menuSuggestions = pgTable("menu_suggestions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  guestName: text("guest_name").notNull(),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
+  itemName: text("item_name").notNull(),
+  itemType: varchar("item_type", { length: 20 }).notNull(),
+  description: text("description"),
+  status: varchar("status", { length: 20 }).notNull().default("new"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
 
+export const insertMenuSuggestionSchema = createInsertSchema(menuSuggestions).omit({
+  id: true,
+  status: true,
+  createdAt: true,
+});
+export type InsertMenuSuggestion = z.infer<typeof insertMenuSuggestionSchema>;
+export type MenuSuggestion = typeof menuSuggestions.$inferSelect;
+
+export const deliveryEnrollments = pgTable("delivery_enrollments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  guestName: text("guest_name").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  optInConfirmed: boolean("opt_in_confirmed").notNull().default(false),
+  preferredContactWindow: text("preferred_contact_window"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertDeliveryEnrollmentSchema = createInsertSchema(deliveryEnrollments).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertDeliveryEnrollment = z.infer<typeof insertDeliveryEnrollmentSchema>;
+export type DeliveryEnrollment = typeof deliveryEnrollments.$inferSelect;
 export { conversations, messages } from "./models/chat";
 export type { Conversation, Message, InsertConversation, InsertMessage } from "./models/chat";
