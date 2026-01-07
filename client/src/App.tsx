@@ -15,7 +15,11 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import PrintMenu from "@/pages/print-menu";
 import TVDisplay from "@/pages/tv-display";
+// Add this import near the top
+import About from "@/pages/about";
 
+// Add this route inside Switch (after the "/" route)
+<Route path="/about" component={About} />
 function Router() {
   const hydrated = useHydrated();
   
