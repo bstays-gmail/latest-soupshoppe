@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ContactForm } from '@/components/contact-form';
 import { AnnouncementOverlay } from '@/components/announcement-overlay';
+import { MenuSuggestionPopup, DeliveryEnrollmentPopup } from '@/components/customer-forms';
 import { Link, useSearch } from 'wouter';
 import { useDailyMenu } from '@/hooks/use-daily-menu';
 
@@ -64,6 +65,12 @@ export default function Home() {
                 <Utensils className="h-4 w-4" />
               </Button>
             </Link>
+          </div>
+          
+          {/* Quick Action Popups */}
+          <div className="flex gap-3 justify-center flex-wrap pt-2">
+            <MenuSuggestionPopup />
+            <DeliveryEnrollmentPopup />
           </div>
         </section>
 
