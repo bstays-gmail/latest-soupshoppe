@@ -1,6 +1,6 @@
-import { type User, type InsertUser, type DailyMenu, type InsertDailyMenu, type MenuItemDB, type InsertMenuItem, type GeneratedImage, type AnnouncementSettings, users, dailyMenus, menuItems, generatedImages, siteSettings } from "@shared/schema";
+import { type User, type InsertUser, type DailyMenu, type InsertDailyMenu, type MenuItemDB, type InsertMenuItem, type GeneratedImage, type AnnouncementSettings, type MenuSuggestion, type InsertMenuSuggestion, type DeliveryEnrollment, type InsertDeliveryEnrollment, users, dailyMenus, menuItems, generatedImages, siteSettings, menuSuggestions, deliveryEnrollments } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import * as fs from "fs";
 import * as path from "path";
@@ -41,6 +41,11 @@ export interface IStorage {
   saveGeneratedImage(itemId: string, imageUrl: string, itemData?: { name: string; description?: string; type: string; tags?: string[] }): Promise<GeneratedImage>;
   getAnnouncementSettings(): Promise<AnnouncementSettings>;
   saveAnnouncementSettings(settings: AnnouncementSettings): Promise<AnnouncementSettings>;
+  createMenuSuggestion(suggestion: InsertMenuSuggestion): Promise<MenuSuggestion>;
+  getAllMenuSuggestions(): Promise<MenuSuggestion[]>;
+  updateMenuSuggestionStatus(id: string, status: string): Promise<MenuSuggestion | undefined>;
+  createDeliveryEnrollment(enrollment: InsertDeliveryEnrollment): Promise<DeliveryEnrollment>;
+  getAllDeliveryEnrollments(): Promise<DeliveryEnrollment[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -138,7 +143,6 @@ export class DatabaseStorage implements IStorage {
 
   async getCustomMenuItems(): Promise<MenuItemDB[]> {
     try {
-      // Return all menu items (both custom and non-custom with generated images)
       const items = await db.select().from(menuItems);
       return items;
     } catch (dbError) {
@@ -197,14 +201,12 @@ export class DatabaseStorage implements IStorage {
         result = created;
       }
       
-      // Update or create the menu item with the new imageUrl
       const existingMenuItem = await db.select().from(menuItems).where(eq(menuItems.id, itemId));
       if (existingMenuItem.length > 0) {
         await db.update(menuItems)
           .set({ imageUrl })
           .where(eq(menuItems.id, itemId));
       } else if (itemData) {
-        // If the item doesn't exist in DB (built-in item), create it with isCustom=false
         await db.insert(menuItems).values({
           id: itemId,
           name: itemData.name,
@@ -258,6 +260,59 @@ export class DatabaseStorage implements IStorage {
     } catch (dbError) {
       console.log("Database error saving announcement settings:", dbError);
       throw dbError;
+    }
+  }
+
+  async createMenuSuggestion(suggestion: InsertMenuSuggestion): Promise<MenuSuggestion> {
+    try {
+      const [created] = await db.insert(menuSuggestions).values(suggestion).returning();
+      return created;
+    } catch (dbError) {
+      console.log("Database error creating menu suggestion:", dbError);
+      throw dbError;
+    }
+  }
+
+  async getAllMenuSuggestions(): Promise<MenuSuggestion[]> {
+    try {
+      const suggestions = await db.select().from(menuSuggestions).orderBy(desc(menuSuggestions.createdAt));
+      return suggestions;
+    } catch (dbError) {
+      console.log("Database error fetching menu suggestions:", dbError);
+      return [];
+    }
+  }
+
+  async updateMenuSuggestionStatus(id: string, status: string): Promise<MenuSuggestion | undefined> {
+    try {
+      const [updated] = await db.update(menuSuggestions)
+        .set({ status })
+        .where(eq(menuSuggestions.id, id))
+        .returning();
+      return updated;
+    } catch (dbError) {
+      console.log("Database error updating menu suggestion:", dbError);
+      throw dbError;
+    }
+  }
+
+  async createDeliveryEnrollment(enrollment: InsertDeliveryEnrollment): Promise<DeliveryEnrollment> {
+    try {
+      const [created] = await db.insert(deliveryEnrollments).values(enrollment).returning();
+      return created;
+    } catch (dbError) {
+      console.log("Database error creating delivery enrollment:", dbError);
+      throw dbError;
+    }
+  }
+
+  async getAllDeliveryEnrollments(): Promise<DeliveryEnrollment[]> {
+    try {
+      const enrollments = await db.select().from(deliveryEnrollments).orderBy(desc(deliveryEnrollments.createdAt));
+      return enrollments;
+    } catch (dbError) {
+      console.log("Database error fetching delivery enrollments:", dbError);
+      return [];
     }
   }
 }
