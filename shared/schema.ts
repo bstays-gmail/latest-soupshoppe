@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, boolean, json } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, boolean, json, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -70,6 +70,7 @@ export interface AnnouncementSettings {
   backgroundColor: string;
   textColor: string;
 }
+
 export const menuSuggestions = pgTable("menu_suggestions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   guestName: text("guest_name").notNull(),
@@ -106,5 +107,6 @@ export const insertDeliveryEnrollmentSchema = createInsertSchema(deliveryEnrollm
 });
 export type InsertDeliveryEnrollment = z.infer<typeof insertDeliveryEnrollmentSchema>;
 export type DeliveryEnrollment = typeof deliveryEnrollments.$inferSelect;
+
 export { conversations, messages } from "./models/chat";
 export type { Conversation, Message, InsertConversation, InsertMessage } from "./models/chat";
