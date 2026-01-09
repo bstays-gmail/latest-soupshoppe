@@ -419,32 +419,36 @@ export async function registerRoutes(
     }
   });
 
-  // Helper function to send notification emails
+  // Helper function to send notification emails using Resend API
   const sendNotificationEmail = async (subject: string, htmlBody: string) => {
-    const gmailUser = process.env.GMAIL_USER;
-    const gmailPass = process.env.GMAIL_APP_PASSWORD;
+    const resendKey = process.env.RESEND_API_KEY;
     
-    if (!gmailUser || !gmailPass) {
-      console.log("Email notifications disabled - GMAIL credentials not configured");
+    if (!resendKey) {
+      console.log("Email notifications disabled - RESEND_API_KEY not configured");
       return;
     }
 
     try {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: gmailUser,
-          pass: gmailPass,
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendKey}`,
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          from: "Soup Shoppe <onboarding@resend.dev>",
+          to: ["info@soupshoppe.net"],
+          subject,
+          html: htmlBody,
+        }),
       });
-
-      await transporter.sendMail({
-        from: `"Soup Shoppe" <${gmailUser}>`,
-        to: "info@soupshoppe.net",
-        subject,
-        html: htmlBody,
-      });
-      console.log(`Notification email sent: ${subject}`);
+      
+      if (response.ok) {
+        console.log(`Notification email sent: ${subject}`);
+      } else {
+        const error = await response.json();
+        console.error("Failed to send notification email:", error);
+      }
     } catch (error) {
       console.error("Failed to send notification email:", error);
     }
