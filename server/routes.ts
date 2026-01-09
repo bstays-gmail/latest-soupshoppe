@@ -400,7 +400,7 @@ export async function registerRoutes(
       });
       await transporter.sendMail({
         from: `"Soup Shoppe" <${gmailUser}>`,
-        to: gmailUser,
+        to: info@soupshoppe.net,
         subject,
         html: htmlBody,
       });
