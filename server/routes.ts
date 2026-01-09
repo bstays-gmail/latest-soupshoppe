@@ -393,14 +393,18 @@ export async function registerRoutes(
       console.log("Email notifications disabled - GMAIL credentials not configured");
       return;
     }
-    try {
+     try {
       const transporter = nodemailer.createTransport({
         service: "gmail",
-        auth: { user: gmailUser, pass: gmailPass },
+        auth: {
+          user: gmailUser,
+          pass: gmailPass,
+        },
       });
+
       await transporter.sendMail({
         from: `"Soup Shoppe" <${gmailUser}>`,
-        to: info@soupshoppe.net,
+        to: "info@soupshoppe.net",
         subject,
         html: htmlBody,
       });
@@ -408,7 +412,6 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Failed to send notification email:", error);
     }
-  };
 
   app.post("/api/menu-suggestions", async (req, res) => {
     try {
