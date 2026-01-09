@@ -18,6 +18,7 @@ export async function registerRoutes(
   
   app.use("/generated-images", express.static(join(process.cwd(), "public", "generated-images")));
 
+  // Download backup route (full with images)
   app.get("/download-backup", (req, res) => {
     const backupPath = join(process.cwd(), "soup-backup.tar.gz");
     if (existsSync(backupPath)) {
@@ -27,6 +28,7 @@ export async function registerRoutes(
     }
   });
 
+  // Download code-only backup (small, for GitHub)
   app.get("/download-code", (req, res) => {
     const backupPath = join(process.cwd(), "soup-code-only.tar.gz");
     if (existsSync(backupPath)) {
@@ -36,6 +38,7 @@ export async function registerRoutes(
     }
   });
 
+  // Download latest code for GitHub sync
   app.get("/download-latest", (req, res) => {
     const backupPath = join(process.cwd(), "public", "soup-code-latest.tar.gz");
     if (existsSync(backupPath)) {
@@ -45,6 +48,7 @@ export async function registerRoutes(
     }
   });
 
+  // Download light version (no images) for GitHub sync
   app.get("/download-light", (req, res) => {
     const zipPath = join(process.cwd(), "public", "soupshoppe-code-light.zip");
     const tarPath = join(process.cwd(), "public", "soup-code-light.tar.gz");
@@ -57,6 +61,7 @@ export async function registerRoutes(
     }
   });
 
+  // Download fresh source code
   app.get("/download-fresh", (req, res) => {
     const zipPath = join(process.cwd(), "public", "downloads", "soup-shoppe-fresh.zip");
     if (existsSync(zipPath)) {
@@ -66,6 +71,7 @@ export async function registerRoutes(
     }
   });
 
+  // Download TV display file
   app.get("/download-tv-display", (req, res) => {
     const filePath = join(process.cwd(), "client", "src", "pages", "tv-display.tsx");
     if (existsSync(filePath)) {
@@ -75,6 +81,7 @@ export async function registerRoutes(
     }
   });
 
+  // Download TV update bundle (both files needed)
   app.get("/download-tv-update", (req, res) => {
     const zipPath = join(process.cwd(), "public", "downloads", "tv-update.zip");
     if (existsSync(zipPath)) {
@@ -84,6 +91,7 @@ export async function registerRoutes(
     }
   });
 
+  // Download production update files
   app.get("/production-update.zip", (req, res) => {
     const zipPath = join(process.cwd(), "public", "production-update.zip");
     if (existsSync(zipPath)) {
@@ -93,6 +101,7 @@ export async function registerRoutes(
     }
   });
 
+  // Download production update v2
   app.get("/production-update-v2.zip", (req, res) => {
     const zipPath = join(process.cwd(), "public", "production-update-v2.zip");
     if (existsSync(zipPath)) {
@@ -102,6 +111,7 @@ export async function registerRoutes(
     }
   });
 
+  // Download store.ts directly
   app.get("/download/store.ts", (req, res) => {
     const filePath = join(process.cwd(), "client", "src", "lib", "store.ts");
     if (existsSync(filePath)) {
@@ -111,6 +121,7 @@ export async function registerRoutes(
     }
   });
 
+  // Download home.tsx directly
   app.get("/download/home.tsx", (req, res) => {
     const filePath = join(process.cwd(), "client", "src", "pages", "home.tsx");
     if (existsSync(filePath)) {
@@ -120,6 +131,7 @@ export async function registerRoutes(
     }
   });
 
+  // Download light version zip
   app.get("/soupshoppe-light.zip", (req, res) => {
     const zipPath = join(process.cwd(), "public", "soupshoppe-light.zip");
     if (existsSync(zipPath)) {
@@ -129,6 +141,7 @@ export async function registerRoutes(
     }
   });
 
+  // Download custom AI-generated images for manual upload to production
   app.get("/custom-images.zip", (req, res) => {
     const zipPath = join(process.cwd(), "public", "custom-images.zip");
     if (existsSync(zipPath)) {
@@ -138,12 +151,15 @@ export async function registerRoutes(
     }
   });
 
+  // Email diagnostic endpoint - tests Resend API
   app.get("/api/email-test", async (req, res) => {
     const resendKey = process.env.RESEND_API_KEY;
+    
     const result: any = {
       resendKeySet: !!resendKey,
       resendKeyLength: resendKey?.length || 0,
     };
+    
     if (resendKey) {
       try {
         const response = await fetch("https://api.resend.com/emails", {
@@ -154,11 +170,12 @@ export async function registerRoutes(
           },
           body: JSON.stringify({
             from: "Soup Shoppe <onboarding@resend.dev>",
-            to: ["info@soupshoppe.net"],
+            to: ["bstays@gmail.com"],
             subject: "Test Email from Soup Shoppe",
             html: "<h1>Test Email</h1><p>This is a test from the Soup Shoppe website.</p>",
           }),
         });
+        
         const data = await response.json();
         result.status = response.status;
         result.ok = response.ok;
@@ -169,6 +186,7 @@ export async function registerRoutes(
     } else {
       result.connectionTest = "SKIPPED - RESEND_API_KEY missing";
     }
+    
     res.json(result);
   });
 
@@ -237,19 +255,28 @@ export async function registerRoutes(
     }
     try {
       const menuData = req.body;
+      
+      // If publishing, validate that all selected custom items have Cloudinary images (not local paths)
       if (menuData.isPublished) {
         const itemsNeedingCloudinaryImages: string[] = [];
         const generatedImages = await storage.getGeneratedImages();
         const customItems = await storage.getCustomMenuItems();
+        
+        // Helper to check if a custom item has a production-ready (Cloudinary) image
         const hasCloudinaryImage = (itemId: string | null): boolean => {
-          if (!itemId) return true;
-          if (!itemId.includes('-')) return true;
+          if (!itemId) return true; // Empty slot is OK
+          // Built-in items (like s1, p1, sw1, etc.) have Cloudinary images embedded in frontend
+          if (!itemId.includes('-')) return true; // UUID items have dashes, built-in don't
+          // For custom items (UUIDs), check if they have a Cloudinary URL
           const imageRecord = generatedImages.find(img => img.itemId === itemId);
           if (imageRecord?.imageUrl?.startsWith('http')) return true;
+          // Check if custom item has Cloudinary image URL
           const customItem = customItems.find(item => item.id === itemId);
           if (customItem?.imageUrl?.startsWith('http')) return true;
-          return false;
+          return false; // Has local path like /generated-images/ which won't work in production
         };
+        
+        // Check each custom item used in menu
         if (menuData.paniniId && !hasCloudinaryImage(menuData.paniniId)) {
           const item = customItems.find(i => i.id === menuData.paniniId);
           itemsNeedingCloudinaryImages.push(`Panini: ${item?.name || 'Custom item'}`);
@@ -266,14 +293,16 @@ export async function registerRoutes(
           const item = customItems.find(i => i.id === menuData.entreeId);
           itemsNeedingCloudinaryImages.push(`Entrée: ${item?.name || 'Custom item'}`);
         }
+        
         if (itemsNeedingCloudinaryImages.length > 0) {
           return res.status(400).json({ 
             error: "Cannot publish: Some custom items have images that won't work on the live website",
             missingImages: itemsNeedingCloudinaryImages,
-            message: `These items need new images for the live website: ${itemsNeedingCloudinaryImages.join(', ')}. Please click "Generate Image" for each item in the admin dashboard.`
+            message: `These items need new images for the live website: ${itemsNeedingCloudinaryImages.join(', ')}. Please click "Generate Image" for each item in the admin dashboard - this will create images that work everywhere.`
           });
         }
       }
+      
       const menu = await storage.saveDailyMenu(menuData);
       res.json(menu);
     } catch (error) {
@@ -335,6 +364,7 @@ export async function registerRoutes(
     }
   });
 
+  // Contact form email submission
   app.post("/api/contact", async (req, res) => {
     try {
       const { name, email, subject, message } = req.body;
@@ -349,6 +379,7 @@ export async function registerRoutes(
     }
   });
 
+  // Catering request email submission
   app.post("/api/catering", async (req, res) => {
     try {
       const { fullName, email, phone, eventDate, guestCount, eventType, menuPreferences, additionalInfo } = req.body;
@@ -363,6 +394,7 @@ export async function registerRoutes(
     }
   });
 
+  // Get announcement settings (public - no auth required)
   app.get("/api/announcement", async (req, res) => {
     try {
       const settings = await storage.getAnnouncementSettings();
@@ -373,6 +405,7 @@ export async function registerRoutes(
     }
   });
 
+  // Save announcement settings (admin only)
   app.post("/api/announcement", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -386,14 +419,17 @@ export async function registerRoutes(
     }
   });
 
+  // Helper function to send notification emails
   const sendNotificationEmail = async (subject: string, htmlBody: string) => {
     const gmailUser = process.env.GMAIL_USER;
     const gmailPass = process.env.GMAIL_APP_PASSWORD;
+    
     if (!gmailUser || !gmailPass) {
       console.log("Email notifications disabled - GMAIL credentials not configured");
       return;
     }
-     try {
+
+    try {
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -412,7 +448,9 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Failed to send notification email:", error);
     }
+  };
 
+  // Menu Suggestions - public endpoint for submissions
   app.post("/api/menu-suggestions", async (req, res) => {
     try {
       const { guestName, contactEmail, contactPhone, itemName, itemType, description } = req.body;
@@ -427,17 +465,23 @@ export async function registerRoutes(
         itemType,
         description: description || null,
       });
+
+      // Send email notification
       sendNotificationEmail(
         `New Menu Suggestion: ${itemName}`,
-        `<h2>New Menu Suggestion from Soup Shoppe Website</h2>
+        `
+        <h2>New Menu Suggestion from Soup Shoppe Website</h2>
         <p><strong>From:</strong> ${guestName}</p>
         <p><strong>Item Name:</strong> ${itemName}</p>
         <p><strong>Type:</strong> ${itemType}</p>
         ${description ? `<p><strong>Description:</strong> ${description}</p>` : ''}
         ${contactEmail ? `<p><strong>Email:</strong> ${contactEmail}</p>` : ''}
         ${contactPhone ? `<p><strong>Phone:</strong> ${contactPhone}</p>` : ''}
-        <hr><p><a href="https://www.mysoupshoppe.com/admin">View in Admin Dashboard</a></p>`
+        <hr>
+        <p><a href="https://www.mysoupshop.com/admin">View all suggestions in Admin Dashboard</a></p>
+        `
       );
+
       res.json({ success: true, message: "Thank you for your suggestion!", suggestion });
     } catch (error) {
       console.error("Error creating menu suggestion:", error);
@@ -445,6 +489,7 @@ export async function registerRoutes(
     }
   });
 
+  // Menu Suggestions - admin endpoints
   app.get("/api/admin/menu-suggestions", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -475,6 +520,7 @@ export async function registerRoutes(
     }
   });
 
+  // Delivery Enrollment - public endpoint for submissions
   app.post("/api/delivery-enrollment", async (req, res) => {
     try {
       const { guestName, phoneNumber, optInConfirmed, preferredContactWindow, notes } = req.body;
@@ -491,15 +537,21 @@ export async function registerRoutes(
         preferredContactWindow: preferredContactWindow || null,
         notes: notes || null,
       });
+
+      // Send email notification
       sendNotificationEmail(
         `New Delivery Signup: ${guestName}`,
-        `<h2>New Delivery Program Enrollment</h2>
+        `
+        <h2>New Delivery Program Enrollment</h2>
         <p><strong>Name:</strong> ${guestName}</p>
         <p><strong>Phone:</strong> ${phoneNumber}</p>
-        ${preferredContactWindow ? `<p><strong>Preferred Time:</strong> ${preferredContactWindow}</p>` : ''}
+        ${preferredContactWindow ? `<p><strong>Preferred Contact Time:</strong> ${preferredContactWindow}</p>` : ''}
         ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ''}
-        <hr><p><a href="https://www.mysoupshoppe.com/admin">View in Admin Dashboard</a></p>`
+        <hr>
+        <p><a href="https://www.mysoupshop.com/admin">View all enrollments in Admin Dashboard</a></p>
+        `
       );
+
       res.json({ success: true, message: "You're enrolled! We'll text you about advance orders.", enrollment });
     } catch (error) {
       console.error("Error creating delivery enrollment:", error);
@@ -507,6 +559,7 @@ export async function registerRoutes(
     }
   });
 
+  // Delivery Enrollment - admin endpoints
   app.get("/api/admin/delivery-enrollments", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -520,6 +573,7 @@ export async function registerRoutes(
     }
   });
 
+  // Export delivery enrollments as CSV
   app.get("/api/admin/delivery-enrollments/csv", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -538,6 +592,103 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error exporting enrollments CSV:", error);
       res.status(500).json({ error: "Failed to export CSV" });
+    }
+  });
+
+  // Export all menus and custom items for syncing to production
+  app.get("/api/admin/export-data", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+      const menus = await storage.getAllMenus();
+      const customItems = await storage.getCustomMenuItems();
+      const generatedImages = await storage.getGeneratedImages();
+      
+      res.json({
+        exportedAt: new Date().toISOString(),
+        menus,
+        customItems,
+        generatedImages
+      });
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      res.status(500).json({ error: "Failed to export data" });
+    }
+  });
+
+  // Import menus and custom items from development
+  app.post("/api/admin/import-data", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+      const { menus, customItems, generatedImages } = req.body;
+      
+      let menusImported = 0;
+      let itemsImported = 0;
+      let imagesImported = 0;
+      
+      // Step 1: Import custom menu items first (dependencies for menus)
+      if (customItems && Array.isArray(customItems)) {
+        for (const item of customItems) {
+          // Sanitize: only include valid fields for InsertMenuItem
+          const sanitizedItem = {
+            id: item.id,
+            name: item.name,
+            description: item.description || "",
+            type: item.type,
+            tags: Array.isArray(item.tags) ? item.tags : [],
+            imageUrl: item.imageUrl || null,
+            isCustom: item.isCustom ?? true,
+          };
+          await storage.saveMenuItem(sanitizedItem);
+          itemsImported++;
+        }
+      }
+      
+      // Step 2: Import generated image references (with item data for backfill)
+      if (generatedImages && Array.isArray(generatedImages)) {
+        for (const img of generatedImages) {
+          // Find matching custom item data if available
+          const matchingItem = customItems?.find((item: any) => item.id === img.itemId);
+          const itemData = matchingItem ? {
+            name: matchingItem.name,
+            description: matchingItem.description,
+            type: matchingItem.type,
+            tags: matchingItem.tags,
+          } : undefined;
+          
+          await storage.saveGeneratedImage(img.itemId, img.imageUrl, itemData);
+          imagesImported++;
+        }
+      }
+      
+      // Step 3: Import menus (after items exist)
+      if (menus && Array.isArray(menus)) {
+        for (const menu of menus) {
+          // Sanitize: only include valid fields for InsertDailyMenu
+          const sanitizedMenu = {
+            date: menu.date,
+            soups: Array.isArray(menu.soups) ? menu.soups : [],
+            paniniId: menu.paniniId || null,
+            sandwichId: menu.sandwichId || null,
+            saladId: menu.saladId || null,
+            entreeId: menu.entreeId || null,
+            isPublished: menu.isPublished ?? false,
+          };
+          await storage.saveDailyMenu(sanitizedMenu);
+          menusImported++;
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Imported ${menusImported} menus, ${itemsImported} custom items, ${imagesImported} image references`
+      });
+    } catch (error) {
+      console.error("Error importing data:", error);
+      res.status(500).json({ error: "Failed to import data" });
     }
   });
 
