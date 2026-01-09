@@ -154,7 +154,7 @@ export async function registerRoutes(
           },
           body: JSON.stringify({
             from: "Soup Shoppe <onboarding@resend.dev>",
-            to: ["bstays@gmail.com"],
+            to: ["info@soupshoppe.net"],
             subject: "Test Email from Soup Shoppe",
             html: "<h1>Test Email</h1><p>This is a test from the Soup Shoppe website.</p>",
           }),
