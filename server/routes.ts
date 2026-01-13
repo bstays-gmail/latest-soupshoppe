@@ -18,6 +18,44 @@ export async function registerRoutes(
   
   app.use("/generated-images", express.static(join(process.cwd(), "public", "generated-images")));
 
+  // Serve sitemap.xml for SEO
+  app.get("/sitemap.xml", (req, res) => {
+    res.setHeader("Content-Type", "application/xml");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://mysoupshop.com/</loc>
+    <lastmod>2026-01-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://mysoupshop.com/about</loc>
+    <lastmod>2026-01-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mysoupshop.com/catering</loc>
+    <lastmod>2026-01-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mysoupshop.com/print-menu</loc>
+    <lastmod>2026-01-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>`);
+  });
+
+  // Serve Google verification file
+  app.get("/google4079748a5a446aba.html", (req, res) => {
+    res.setHeader("Content-Type", "text/html");
+    res.send("google-site-verification: google4079748a5a446aba.html");
+  });
+
   // Download backup route (full with images)
   app.get("/download-backup", (req, res) => {
     const backupPath = join(process.cwd(), "soup-backup.tar.gz");
