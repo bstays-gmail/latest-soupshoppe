@@ -42,6 +42,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}>
               Today's Menu
             </Link>
+            <Link href="/about" className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              location === '/about' ? "text-primary font-semibold" : "text-muted-foreground"
+            )}>
+              About Us
+            </Link>
             {user ? (
               <>
                 <Link href="/admin" className={cn(
