@@ -4,6 +4,7 @@ import { setupAuth, comparePasswords, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { sendContactEmail, sendCateringEmail } from "./email";
+import { sendPushoverNotification } from "./pushover";
 import express from "express";
 import { join } from "path";
 import { existsSync } from "fs";
@@ -410,6 +411,13 @@ export async function registerRoutes(
         return res.status(400).json({ error: "All fields are required" });
       }
       await sendContactEmail({ name, email, subject, message });
+      
+      // Send Pushover notification
+      sendPushoverNotification({
+        title: "New Contact Form",
+        message: `From: ${name}\nSubject: ${subject}\n\n${message.substring(0, 200)}${message.length > 200 ? '...' : ''}`,
+      });
+      
       res.json({ success: true, message: "Email sent successfully" });
     } catch (error) {
       console.error("Error sending contact email:", error);
@@ -425,6 +433,14 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Name, email, phone, and event date are required" });
       }
       await sendCateringEmail({ fullName, email, phone, eventDate, guestCount, eventType, menuPreferences, additionalInfo });
+      
+      // Send Pushover notification
+      sendPushoverNotification({
+        title: "New Catering Request",
+        message: `From: ${fullName}\nDate: ${eventDate}\nGuests: ${guestCount || 'Not specified'}\nType: ${eventType || 'Not specified'}\nPhone: ${phone}`,
+        priority: 1,
+      });
+      
       res.json({ success: true, message: "Catering request sent successfully" });
     } catch (error) {
       console.error("Error sending catering email:", error);
@@ -524,6 +540,12 @@ export async function registerRoutes(
         `
       );
 
+      // Send Pushover notification
+      sendPushoverNotification({
+        title: "New Menu Suggestion",
+        message: `From: ${guestName}\nItem: ${itemName}\nType: ${itemType}${description ? `\n${description.substring(0, 100)}` : ''}`,
+      });
+
       res.json({ success: true, message: "Thank you for your suggestion!", suggestion });
     } catch (error) {
       console.error("Error creating menu suggestion:", error);
@@ -593,6 +615,12 @@ export async function registerRoutes(
         <p><a href="https://www.mysoupshop.com/admin">View all enrollments in Admin Dashboard</a></p>
         `
       );
+
+      // Send Pushover notification
+      sendPushoverNotification({
+        title: "New Delivery Signup",
+        message: `Name: ${guestName}\nPhone: ${phoneNumber}${preferredContactWindow ? `\nPreferred: ${preferredContactWindow}` : ''}`,
+      });
 
       res.json({ success: true, message: "You're enrolled! We'll text you about advance orders.", enrollment });
     } catch (error) {
