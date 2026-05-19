@@ -7,9 +7,17 @@ let _openai: OpenAI | null = null;
 
 function getOpenAI(): OpenAI {
   if (!_openai) {
+    // Support both Replit AI Integrations and standard OpenAI API key
+    const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+    const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || undefined;
+    
+    if (!apiKey) {
+      throw new Error('No OpenAI API key found. Set either AI_INTEGRATIONS_OPENAI_API_KEY or OPENAI_API_KEY');
+    }
+    
     _openai = new OpenAI({
-      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      apiKey,
+      baseURL,
     });
   }
   return _openai;

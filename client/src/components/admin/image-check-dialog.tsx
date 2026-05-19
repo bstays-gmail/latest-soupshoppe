@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, ImagePlus, Sparkles, Check, X } from 'lucide-react';
+import { Loader2, ImagePlus, Sparkles, Check, X, Upload, AlertCircle } from 'lucide-react';
 import { useMenuStore, type MenuItem } from '@/lib/store';
 
 interface ImageCheckDialogProps {
@@ -17,10 +17,61 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
   const [currentIndex, setCurrentIndex] = useState(0);
   const [generatedItems, setGeneratedItems] = useState<MenuItem[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
+  const [uploadedItems, setUploadedItems] = useState<Record<string, string>>({});
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentUploadItemId, setCurrentUploadItemId] = useState<string | null>(null);
 
   const progress = itemsWithoutImages.length > 0 
     ? (currentIndex / itemsWithoutImages.length) * 100 
     : 0;
+
+  const handleUploadClick = (itemId: string) => {
+    setCurrentUploadItemId(itemId);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentUploadItemId) return;
+
+    setUploadingId(currentUploadItemId);
+    
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('itemId', currentUploadItemId);
+
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      
+      if (data.url) {
+        setUploadedItems(prev => ({ ...prev, [currentUploadItemId]: data.url }));
+        
+        await fetch('/api/generated-images', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ itemId: currentUploadItemId, imageUrl: data.url }),
+          credentials: 'include',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to upload image:', error);
+    } finally {
+      setUploadingId(null);
+      setCurrentUploadItemId(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const generateImages = async () => {
     setIsGenerating(true);
@@ -31,8 +82,10 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
     const updatedItems: MenuItem[] = [];
     const newErrors: string[] = [];
 
-    for (let i = 0; i < itemsWithoutImages.length; i++) {
-      const item = itemsWithoutImages[i];
+    const itemsToGenerate = itemsWithoutImages.filter(item => !uploadedItems[item.id]);
+
+    for (let i = 0; i < itemsToGenerate.length; i++) {
+      const item = itemsToGenerate[i];
       setCurrentIndex(i + 1);
 
       try {
@@ -81,6 +134,10 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
       }
     }
 
+    itemsWithoutImages.filter(item => uploadedItems[item.id]).forEach(item => {
+      updatedItems.push({ ...item, imageUrl: uploadedItems[item.id] });
+    });
+
     setGeneratedItems(updatedItems);
     setErrors(newErrors);
     setIsGenerating(false);
@@ -94,13 +151,20 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
   };
 
   const handleContinue = async () => {
-    // Reload custom items from server to get updated imageUrls
     await loadCustomItems();
-    onComplete(generatedItems);
+    const allUpdatedItems = generatedItems.length > 0 
+      ? generatedItems 
+      : itemsWithoutImages.map(item => 
+          uploadedItems[item.id] 
+            ? { ...item, imageUrl: uploadedItems[item.id] }
+            : item
+        );
+    onComplete(allUpdatedItems);
     onClose();
   };
 
-  const isComplete = currentIndex === itemsWithoutImages.length && !isGenerating;
+  const itemsToGenerate = itemsWithoutImages.filter(item => !uploadedItems[item.id]);
+  const isComplete = currentIndex === itemsToGenerate.length && !isGenerating && currentIndex > 0;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && !isGenerating && onClose()}>
@@ -117,18 +181,50 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
         </DialogHeader>
 
         <div className="py-4 space-y-4">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            className="hidden"
+            data-testid="input-image-upload"
+          />
+          
           {!isGenerating && !isComplete && (
             <div className="space-y-3">
               <p className="text-sm font-medium">Items without images:</p>
               <div className="max-h-48 overflow-y-auto space-y-1">
                 {itemsWithoutImages.map((item, idx) => (
                   <div key={item.id} className="flex items-center gap-2 text-sm py-1 px-2 rounded bg-muted/50">
-                    <ImagePlus className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="truncate">{item.name}</span>
-                    <span className="text-xs text-muted-foreground ml-auto capitalize">{item.type}</span>
+                    {uploadedItems[item.id] ? (
+                      <Check className="h-4 w-4 text-green-600 shrink-0" />
+                    ) : (
+                      <ImagePlus className="h-4 w-4 text-muted-foreground shrink-0" />
+                    )}
+                    <span className="truncate flex-1">{item.name}</span>
+                    <span className="text-xs text-muted-foreground capitalize">{item.type}</span>
+                    {!uploadedItems[item.id] && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 px-2"
+                        onClick={() => handleUploadClick(item.id)}
+                        disabled={uploadingId === item.id}
+                        data-testid={`button-upload-image-${item.id}`}
+                      >
+                        {uploadingId === item.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Upload className="h-3 w-3" />
+                        )}
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
+              <p className="text-xs text-muted-foreground">
+                Click the upload icon to use your own photo, or use AI to generate all images below.
+              </p>
             </div>
           )}
 
@@ -154,13 +250,44 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
                 <span className="font-medium">Image generation complete!</span>
               </div>
               {errors.length > 0 && (
-                <div className="text-sm text-destructive">
-                  <p>Failed to generate images for:</p>
-                  <ul className="list-disc ml-4">
-                    {errors.map((name, idx) => (
-                      <li key={idx}>{name}</li>
-                    ))}
-                  </ul>
+                <div className="space-y-2">
+                  <p className="text-sm text-destructive">Failed to generate images for:</p>
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {itemsWithoutImages
+                      .filter(item => errors.includes(item.name))
+                      .map(item => (
+                        <div key={item.id} className="flex items-center gap-2 text-sm py-1 px-2 rounded bg-muted/50">
+                          {uploadedItems[item.id] ? (
+                            <Check className="h-4 w-4 text-green-600 shrink-0" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                          )}
+                          <span className="truncate flex-1">{item.name}</span>
+                          {!uploadedItems[item.id] && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 gap-1"
+                              onClick={() => handleUploadClick(item.id)}
+                              disabled={uploadingId === item.id}
+                              data-testid={`button-upload-failed-${item.id}`}
+                            >
+                              {uploadingId === item.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <>
+                                  <Upload className="h-3 w-3" />
+                                  <span className="text-xs">Upload</span>
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    You can upload your own photos for failed items above.
+                  </p>
                 </div>
               )}
               <p className="text-sm text-muted-foreground">
@@ -170,16 +297,24 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
           {!isGenerating && !isComplete && (
             <>
               <Button variant="outline" onClick={handleSkip}>
                 Skip & Publish Anyway
               </Button>
-              <Button onClick={generateImages} className="gap-2">
-                <Sparkles className="h-4 w-4" />
-                Generate Images
-              </Button>
+              {Object.keys(uploadedItems).length > 0 && Object.keys(uploadedItems).length === itemsWithoutImages.length && (
+                <Button onClick={handleContinue} className="gap-2">
+                  <Check className="h-4 w-4" />
+                  Continue with Uploads
+                </Button>
+              )}
+              {Object.keys(uploadedItems).length < itemsWithoutImages.length && (
+                <Button onClick={generateImages} className="gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Generate Remaining with AI
+                </Button>
+              )}
             </>
           )}
           {isComplete && (

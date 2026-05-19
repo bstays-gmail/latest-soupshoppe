@@ -294,54 +294,6 @@ export async function registerRoutes(
     }
     try {
       const menuData = req.body;
-      
-      // If publishing, validate that all selected custom items have Cloudinary images (not local paths)
-      if (menuData.isPublished) {
-        const itemsNeedingCloudinaryImages: string[] = [];
-        const generatedImages = await storage.getGeneratedImages();
-        const customItems = await storage.getCustomMenuItems();
-        
-        // Helper to check if a custom item has a production-ready (Cloudinary) image
-        const hasCloudinaryImage = (itemId: string | null): boolean => {
-          if (!itemId) return true; // Empty slot is OK
-          // Built-in items (like s1, p1, sw1, etc.) have Cloudinary images embedded in frontend
-          if (!itemId.includes('-')) return true; // UUID items have dashes, built-in don't
-          // For custom items (UUIDs), check if they have a Cloudinary URL
-          const imageRecord = generatedImages.find(img => img.itemId === itemId);
-          if (imageRecord?.imageUrl?.startsWith('http')) return true;
-          // Check if custom item has Cloudinary image URL
-          const customItem = customItems.find(item => item.id === itemId);
-          if (customItem?.imageUrl?.startsWith('http')) return true;
-          return false; // Has local path like /generated-images/ which won't work in production
-        };
-        
-        // Check each custom item used in menu
-        if (menuData.paniniId && !hasCloudinaryImage(menuData.paniniId)) {
-          const item = customItems.find(i => i.id === menuData.paniniId);
-          itemsNeedingCloudinaryImages.push(`Panini: ${item?.name || 'Custom item'}`);
-        }
-        if (menuData.sandwichId && !hasCloudinaryImage(menuData.sandwichId)) {
-          const item = customItems.find(i => i.id === menuData.sandwichId);
-          itemsNeedingCloudinaryImages.push(`Sandwich: ${item?.name || 'Custom item'}`);
-        }
-        if (menuData.saladId && !hasCloudinaryImage(menuData.saladId)) {
-          const item = customItems.find(i => i.id === menuData.saladId);
-          itemsNeedingCloudinaryImages.push(`Salad: ${item?.name || 'Custom item'}`);
-        }
-        if (menuData.entreeId && !hasCloudinaryImage(menuData.entreeId)) {
-          const item = customItems.find(i => i.id === menuData.entreeId);
-          itemsNeedingCloudinaryImages.push(`Entrée: ${item?.name || 'Custom item'}`);
-        }
-        
-        if (itemsNeedingCloudinaryImages.length > 0) {
-          return res.status(400).json({ 
-            error: "Cannot publish: Some custom items have images that won't work on the live website",
-            missingImages: itemsNeedingCloudinaryImages,
-            message: `These items need new images for the live website: ${itemsNeedingCloudinaryImages.join(', ')}. Please click "Generate Image" for each item in the admin dashboard - this will create images that work everywhere.`
-          });
-        }
-      }
-      
       const menu = await storage.saveDailyMenu(menuData);
       res.json(menu);
     } catch (error) {

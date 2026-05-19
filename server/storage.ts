@@ -143,6 +143,7 @@ export class DatabaseStorage implements IStorage {
 
   async getCustomMenuItems(): Promise<MenuItemDB[]> {
     try {
+      // Return all menu items (both custom and non-custom with generated images)
       const items = await db.select().from(menuItems);
       return items;
     } catch (dbError) {
@@ -201,12 +202,14 @@ export class DatabaseStorage implements IStorage {
         result = created;
       }
       
+      // Update or create the menu item with the new imageUrl
       const existingMenuItem = await db.select().from(menuItems).where(eq(menuItems.id, itemId));
       if (existingMenuItem.length > 0) {
         await db.update(menuItems)
           .set({ imageUrl })
           .where(eq(menuItems.id, itemId));
       } else if (itemData) {
+        // If the item doesn't exist in DB (built-in item), create it with isCustom=false
         await db.insert(menuItems).values({
           id: itemId,
           name: itemData.name,

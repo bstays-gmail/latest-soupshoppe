@@ -116,7 +116,7 @@ export function MenuForm({ date }: MenuFormProps) {
     }
   };
 
-    const getItemsWithoutImages = (): MenuItem[] => {
+  const getItemsWithoutImages = (): MenuItem[] => {
     const allItems: (MenuItem | null)[] = [
       ...localMenu.soups,
       localMenu.specials.panini,
@@ -156,11 +156,11 @@ export function MenuForm({ date }: MenuFormProps) {
         description: `The menu is now live for everyone to see.`,
         className: "bg-primary text-primary-foreground"
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Publish error:", error);
       toast({
-        title: "Error",
-        description: "Failed to publish menu. Please try again.",
+        title: "Failed to Publish",
+        description: error?.message || "Failed to publish menu. Please try again.",
         variant: "destructive",
       });
     }

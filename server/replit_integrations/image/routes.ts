@@ -5,6 +5,19 @@ import { join } from "path";
 import { randomUUID } from "crypto";
 import { v2 as cloudinary } from "cloudinary";
 import { storage } from "../../storage";
+import multer from "multer";
+
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 const GENERATED_IMAGES_DIR = join(process.cwd(), "public", "generated-images");
 
@@ -101,9 +114,61 @@ export function registerImageRoutes(app: Express): void {
       }
       
       res.json({ url: imageUrl, saved: true, isCloudinary: imageUrl.startsWith('http') });
+    } catch (error: any) {
+      const errMsg = error?.message || String(error);
+      const errCode = error?.status || error?.code || '';
+      console.error("Error generating image:", errCode, errMsg, error);
+      res.status(500).json({ 
+        error: "Failed to generate image",
+        detail: errMsg,
+        code: errCode,
+      });
+    }
+  });
+
+  app.post("/api/upload-image", upload.single('image'), async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No image file provided" });
+      }
+
+      const itemId = req.body.itemId || randomUUID();
+      const buffer = req.file.buffer;
+      
+      let imageUrl: string;
+      const hasCloudinaryConfig = process.env.CLOUDINARY_CLOUD_NAME && 
+                                   process.env.CLOUDINARY_API_KEY && 
+                                   process.env.CLOUDINARY_API_SECRET;
+      
+      if (hasCloudinaryConfig) {
+        try {
+          imageUrl = await uploadToCloudinary(buffer, itemId);
+          console.log(`Image uploaded to Cloudinary: ${imageUrl}`);
+          await storage.saveGeneratedImage(itemId, imageUrl);
+        } catch (cloudinaryError) {
+          console.error("Cloudinary upload failed, falling back to local storage:", cloudinaryError);
+          const filename = `${itemId}.png`;
+          const filepath = join(GENERATED_IMAGES_DIR, filename);
+          writeFileSync(filepath, buffer);
+          imageUrl = `/generated-images/${filename}`;
+          await storage.saveGeneratedImage(itemId, imageUrl);
+        }
+      } else {
+        const filename = `${itemId}.png`;
+        const filepath = join(GENERATED_IMAGES_DIR, filename);
+        writeFileSync(filepath, buffer);
+        imageUrl = `/generated-images/${filename}`;
+        await storage.saveGeneratedImage(itemId, imageUrl);
+      }
+      
+      res.json({ url: imageUrl, saved: true, isCloudinary: imageUrl.startsWith('http') });
     } catch (error) {
-      console.error("Error generating image:", error);
-      res.status(500).json({ error: "Failed to generate image" });
+      console.error("Error uploading image:", error);
+      res.status(500).json({ error: "Failed to upload image" });
     }
   });
 }

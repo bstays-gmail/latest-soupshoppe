@@ -90,8 +90,16 @@ export function useSaveMenu() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiMenu),
+        credentials: 'include',
       });
-      if (!res.ok) throw new Error('Failed to save menu');
+      if (!res.ok) {
+        let errMsg = 'Failed to save menu';
+        try {
+          const errData = await res.json();
+          errMsg = errData.message || errData.error || errMsg;
+        } catch {}
+        throw new Error(errMsg);
+      }
       const saved = await res.json();
       const currentItems = useMenuStore.getState().items;
       return convertApiMenuToLocal(saved, currentItems);
