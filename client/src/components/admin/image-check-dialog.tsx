@@ -17,6 +17,7 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
   const [currentIndex, setCurrentIndex] = useState(0);
   const [generatedItems, setGeneratedItems] = useState<MenuItem[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
+  const [errorDetails, setErrorDetails] = useState<Record<string, string>>({});
   const [uploadedItems, setUploadedItems] = useState<Record<string, string>>({});
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,9 +79,11 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
     setCurrentIndex(0);
     setGeneratedItems([]);
     setErrors([]);
+    setErrorDetails({});
 
     const updatedItems: MenuItem[] = [];
     const newErrors: string[] = [];
+    const newErrorDetails: Record<string, string> = {};
 
     const itemsToGenerate = itemsWithoutImages.filter(item => !uploadedItems[item.id]);
 
@@ -99,7 +102,13 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
         });
 
         if (!response.ok) {
-          throw new Error('Failed to generate image');
+          let serverMsg = `HTTP ${response.status}`;
+          try {
+            const errBody = await response.json();
+            serverMsg = errBody.detail || errBody.error || serverMsg;
+            if (errBody.code) serverMsg += ` (${errBody.code})`;
+          } catch {}
+          throw new Error(serverMsg);
         }
 
         const data = await response.json();
@@ -127,9 +136,10 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
         });
 
         updatedItems.push({ ...item, imageUrl });
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to generate image for ${item.name}:`, error);
         newErrors.push(item.name);
+        newErrorDetails[item.name] = error?.message || String(error);
         updatedItems.push(item);
       }
     }
@@ -140,6 +150,7 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
 
     setGeneratedItems(updatedItems);
     setErrors(newErrors);
+    setErrorDetails(newErrorDetails);
     setIsGenerating(false);
   };
 
@@ -256,13 +267,20 @@ export function ImageCheckDialog({ open, onClose, itemsWithoutImages, onComplete
                     {itemsWithoutImages
                       .filter(item => errors.includes(item.name))
                       .map(item => (
-                        <div key={item.id} className="flex items-center gap-2 text-sm py-1 px-2 rounded bg-muted/50">
-                          {uploadedItems[item.id] ? (
-                            <Check className="h-4 w-4 text-green-600 shrink-0" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                        <div key={item.id} className="flex flex-col gap-1 text-sm py-1 px-2 rounded bg-muted/50">
+                          <div className="flex items-center gap-2">
+                            {uploadedItems[item.id] ? (
+                              <Check className="h-4 w-4 text-green-600 shrink-0" />
+                            ) : (
+                              <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                            )}
+                            <span className="truncate flex-1">{item.name}</span>
+                          </div>
+                          {!uploadedItems[item.id] && errorDetails[item.name] && (
+                            <span className="text-xs text-muted-foreground pl-6 break-words">
+                              {errorDetails[item.name]}
+                            </span>
                           )}
-                          <span className="truncate flex-1">{item.name}</span>
                           {!uploadedItems[item.id] && (
                             <Button
                               size="sm"
